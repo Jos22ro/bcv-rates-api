@@ -1,0 +1,41 @@
+# Dependencias
+.env
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
+
+# Entorno / archivos sensibles
+.env.local
+.env.*.local
+secrets.*
+*.pem
+*.key
+
+# Docker (si lo usas a futuro)
+.dockerignore
+'*.db'
+*.sqlite3
+*.sqlite
+
+# Logs
+*.log
+logs/
+
+# Herramientas / editores
+.vscode/
+.idea/
+.DS_Store
+
+# Otros
+dist/
+build/
+*.pyo
+.pytest_cache/
+.mypy_cache/
+
+# Docs internos del cliente (no versionar)
+Solicitud_Proyecto_API_BCV.md
