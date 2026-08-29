@@ -9,4 +9,4 @@ async def lifespan(app: FastAPI):
     yield
 
 app = FastAPI(lifespan=lifespan)
-app.include_router(tasa.router,prefix='/api')
+app.include_router(tasa.router)
