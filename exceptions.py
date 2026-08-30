@@ -15,3 +15,9 @@ class DivisaNoEncontradaError(BaseBCVException):
     """Se lanza cuando la divisa solicitada no existe o no está soportada."""
 
     pass
+
+
+class DatabaseError(BaseBCVException):
+    """Se lanza cuando falla una operación de lectura o escritura en la BD."""
+
+    pass

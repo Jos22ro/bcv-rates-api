@@ -77,14 +77,15 @@ def obtener_cotizaciones_recientes(session: Session):
         if tasa is not None:
             lista_cotizaciones.append(tasa)
     return lista_cotizaciones
-def obtener_historial(session: Session, divisa: str, limit: int):
+def obtener_historial(session: Session, divisa: str, limit: int, offset: int = 0, desde=None, hasta=None):
     if divisa not in DIVISAS_SOPORTADAS:
         raise DivisaNoEncontradaError("Divisa no encontrada")
-    historial = database.obtener_cotizaciones(session, divisa, limit)
-    return historial
-def obtener_historiales(session: Session, limit: int):
-    historiales = []
-    for divisa in DIVISAS_SOPORTADAS:
-        historial = obtener_historial(session, divisa, limit)
-        historiales.append(historial)
-    return historiales
+    datos = database.obtener_cotizaciones(session, divisa, limit, offset, desde, hasta)
+    total = database.contar_cotizaciones(session, divisa, desde, hasta)
+    return datos, total
+
+
+def obtener_historiales(session: Session, limit: int, offset: int = 0, desde=None, hasta=None):
+    datos = database.obtener_cotizaciones(session, None, limit, offset, desde, hasta)
+    total = database.contar_cotizaciones(session, None, desde, hasta)
+    return datos, total
