@@ -28,7 +28,40 @@ Todos bajo el prefijo `/v1/api/tasa`.
 |---|---|---|
 | `GET` | `/v1/api/tasa` | Tasas de cambio vigentes (dólar y euro). Si la caché expiró, re-scrapea automáticamente. Acepta `?divisa=dolar` o `?divisa=euro`. |
 | `POST` | `/v1/api/tasa/refresh` | Fuerza un scrape y guarda las tasas más recientes en BD. |
-| `GET` | `/v1/api/tasa/historial` | Historial de cotizaciones. Acepta `?divisa=` y `?limit=` (1-100). |
+| `GET` | `/v1/api/tasa/historial` | Historial paginado con filtros. Devuelve `{total, datos}`. |
+
+### Parámetros de `/historial`
+
+| Parámetro | Tipo | Default | Descripción |
+|---|---|---|---|
+| `divisa` | string | — | Filtra por `dolar` o `euro`. |
+| `desde` | fecha `YYYY-MM-DD` | — | Registros posteriores o iguales a esa fecha. |
+| `hasta` | fecha `YYYY-MM-DD` | — | Registros anteriores o iguales a esa fecha. |
+| `limit` | int | `50` | Cantidad de registros por página (1-100). |
+| `offset` | int | `0` | Número de registros a saltar (paginación). |
+
+### Ejemplos
+
+```
+GET /v1/api/tasa/historial
+GET /v1/api/tasa/historial?divisa=dolar
+GET /v1/api/tasa/historial?desde=2026-08-01&hasta=2026-08-15
+GET /v1/api/tasa/historial?divisa=euro&limit=10&offset=20
+GET /v1/api/tasa/historial?divisa=dolar&desde=2026-08-01&hasta=2026-08-31&limit=5&offset=10
+```
+
+Respuesta (siempre con el `total` global, incluso al paginar):
+
+```json
+{
+  "total": 120,
+  "datos": [
+    { "moneda": "USD", "fuente": "https://www.bcv.org.ve", "divisa": "dolar", "valor": 36.5, "fecha_registro": "2026-08-28T..." }
+  ]
+}
+```
+
+Errores: divisa inválida → `404`; fecha mal formada o `desde > hasta` → `400`; `limit`/`offset` fuera de rango → `422`. Una tabla vacía responde `200` con `total: 0` y `datos: []`.
 
 ## Arquitectura
 
@@ -58,14 +91,14 @@ Las fechas se trabajan en **UTC-naive** para evitar choques de zonas horarias (n
 | Archivo | Rol |
 |---|---|
 | `main.py` | App FastAPI; `lifespan` crea las tablas al arrancar |
-| `routers/tasa.py` | Definen los endpoints y validan `divisa` y `limit` |
+| `routers/tasa.py` | Definen los endpoints y validan `divisa`, fechas, `limit` y `offset` |
 | `services/bcv.py` | Scraping del BCV, vigencia (TTL) y guardado |
 | `config/database.py` | Persistencia (guardar y consultar cotizaciones) |
 | `config/db.py` | Engine SQLite y generador de sesiones |
 | `config/config.py` | Constantes (`URL_BCV`, `DIVISAS_SOPORTADAS`, `TTL_HORAS`, etc.) |
 | `models/models.py` | Modelo `Tasa` (SQLModel) con PK compuesta (`divisa`, `date`) |
 | `schemas.py` | Esquemas Pydantic de respuesta |
-| `exceptions.py` | Excepciones de dominio (ej. `ScrapingError`) |
+| `exceptions.py` | Excepciones de dominio (`ScrapingError`, `DivisaNoEncontradaError`, `DatabaseError`) |
 
 ## Notas
 
